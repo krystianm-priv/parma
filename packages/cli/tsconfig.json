@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"target": "esnext",
+		"module": "nodenext",
+		"moduleResolution": "nodenext",
+		"noEmit": true,
+		"erasableSyntaxOnly": true,
+		"strict": true,
+		"types": ["node"],
+		"allowImportingTsExtensions": true,
+		"inlineSourceMap": true,
+		"inlineSources": true,
+
+		// JSX support for ink
+		"jsx": "react"
+	}
+}
