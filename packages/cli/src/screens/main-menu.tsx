@@ -1,41 +1,66 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Text, useApp, useInput } from "ink";
 import SelectInput from "ink-select-input";
 import fs from "node:fs";
+import { useCanvasStore } from "../utils/canvas.store.js";
 
-interface MainMenuProps {
-	configFilePath: string;
-	onBack: () => void;
+interface Config {
+	"#version": number;
+	"#name": string;
+	secrets: Record<string, Record<string, any>>;
 }
 
-export default function MainMenu({ configFilePath, onBack }: MainMenuProps) {
+export default function MainMenu() {
 	const { exit } = useApp();
-	const [config, _setConfig] = useState(() => {
-		try {
-			const content = fs.readFileSync(configFilePath, "utf-8");
-			return JSON.parse(content);
-		} catch (error) {
-			console.error("Error loading config:", error);
-			return null;
-		}
-	});
+	const {
+		configFilePath,
+		setPageTitle,
+		setFooterInstructions,
+		cleanup,
+		setCurrentScreen,
+	} = useCanvasStore();
 
+	const [config, setConfig] = useState<Config | null>(null);
 	const [selectedAction, setSelectedAction] = useState<string | null>(null);
 
-	// Handle Escape key to go back
+	useEffect(() => {
+		if (!configFilePath) {
+			setCurrentScreen("config-selector");
+			return;
+		}
+
+		try {
+			const content = fs.readFileSync(configFilePath, "utf-8");
+			setConfig(JSON.parse(content));
+		} catch (error) {
+			console.error("Error loading config:", error);
+			setConfig(null);
+		}
+	}, [configFilePath, setCurrentScreen]);
+
+	useEffect(() => {
+		if (config) {
+			setPageTitle(`Configuration: ${config["#name"]}`);
+			setFooterInstructions(
+				<Box marginTop={1} justifyContent="space-between">
+					<Text dimColor>↑/↓ Navigate • Enter to select</Text>
+					<Text dimColor>Esc to go back</Text>
+				</Box>,
+			);
+		}
+		return cleanup;
+	}, [config, setPageTitle, setFooterInstructions, cleanup]);
+
 	useInput((_input, key) => {
 		if (key.escape && !selectedAction) {
-			onBack();
+			setCurrentScreen("config-selector");
 		}
 	});
 
 	if (!config) {
 		return (
-			<Box flexDirection="column" paddingX={2} paddingY={1}>
+			<Box flexDirection="column" paddingY={1}>
 				<Text color="red">✗ Failed to load configuration file</Text>
-				<Box marginTop={1}>
-					<Text dimColor>Press Escape to go back</Text>
-				</Box>
 			</Box>
 		);
 	}
@@ -96,27 +121,14 @@ export default function MainMenu({ configFilePath, onBack }: MainMenuProps) {
 	];
 
 	return (
-		<Box flexDirection="column" paddingX={2} paddingY={1}>
+		<Box flexDirection="column">
 			<Box
-				borderStyle="round"
-				borderColor="cyan"
-				paddingX={2}
-				paddingY={1}
-				flexDirection="column"
+				marginBottom={1}
+				paddingX={1}
+				borderStyle="single"
+				borderColor="gray"
 			>
-				<Box marginBottom={1}>
-					<Text bold color="cyan">
-						Configuration: {config["#name"]}
-					</Text>
-				</Box>
-
-				<Box
-					marginBottom={1}
-					paddingX={1}
-					borderStyle="single"
-					borderColor="gray"
-					flexDirection="column"
-				>
+				<Box flexDirection="column" width="100%">
 					<Box justifyContent="space-between">
 						<Text dimColor>File:</Text>
 						<Text color="white">{configFilePath}</Text>
@@ -134,55 +146,50 @@ export default function MainMenu({ configFilePath, onBack }: MainMenuProps) {
 						<Text color="white">{secretCount}</Text>
 					</Box>
 				</Box>
+			</Box>
 
-				{secretCount === 0 && (
-					<Box
-						marginBottom={1}
-						paddingX={1}
-						borderStyle="single"
-						borderColor="yellow"
-					>
-						<Text color="yellow">
-							⚠️ No secrets configured. Use "Add Secret" to get started.
-						</Text>
-					</Box>
-				)}
-
-				<Box marginBottom={1}>
-					<Text bold color="magenta">
-						What would you like to do?
+			{secretCount === 0 && (
+				<Box
+					marginBottom={1}
+					paddingX={1}
+					borderStyle="single"
+					borderColor="yellow"
+				>
+					<Text color="yellow">
+						⚠️ No secrets configured. Use "Add Secret" to get started.
 					</Text>
 				</Box>
+			)}
 
-				<SelectInput
-					items={menuItems}
-					onSelect={(item) => {
-						if (item.value === "exit") {
-							exit();
-						} else if (item.value === "back") {
-							onBack();
-						} else {
-							setSelectedAction(item.value);
-						}
-					}}
-				/>
-
-				<Box marginTop={1} justifyContent="space-between">
-					<Text dimColor>↑/↓ Navigate</Text>
-					<Text dimColor>Enter to select • Esc to go back</Text>
-				</Box>
-
-				{selectedAction && (
-					<Box
-						marginTop={1}
-						paddingX={1}
-						borderStyle="round"
-						borderColor="yellow"
-					>
-						<Text color="yellow">Feature "{selectedAction}" coming soon!</Text>
-					</Box>
-				)}
+			<Box marginBottom={1}>
+				<Text bold color="magenta">
+					What would you like to do?
+				</Text>
 			</Box>
+
+			<SelectInput
+				items={menuItems}
+				onSelect={(item) => {
+					if (item.value === "exit") {
+						exit();
+					} else if (item.value === "back") {
+						setCurrentScreen("config-selector");
+					} else {
+						setSelectedAction(item.value);
+					}
+				}}
+			/>
+
+			{selectedAction && (
+				<Box
+					marginTop={1}
+					paddingX={1}
+					borderStyle="round"
+					borderColor="yellow"
+				>
+					<Text color="yellow">Feature "{selectedAction}" coming soon!</Text>
+				</Box>
+			)}
 		</Box>
 	);
 }

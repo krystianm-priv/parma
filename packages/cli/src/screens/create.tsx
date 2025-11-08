@@ -1,35 +1,72 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Text, useInput } from "ink";
 import TextInput from "ink-text-input";
 import SelectInput from "ink-select-input";
-import Spinner from "ink-spinner";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { useCanvasStore } from "../utils/canvas.store.js";
 
-export default function Create({ onFinish }: { onFinish: () => void }) {
-	// wizard steps: "name" -> "keyMode" -> "keyInput?" -> "review"
-	const [step, setStep] = useState("name");
+type KeyMode = "generate" | "paste";
+
+export default function Create() {
+	const { setPageTitle, setFooterInstructions, cleanup, setCurrentScreen } =
+		useCanvasStore();
 
 	const [name, setName] = useState("");
-	const [nameError, setNameError] = useState("");
-
-	const [keyMode, setKeyMode] = useState<"paste" | "auto" | null>(null); // "paste" | "auto"
+	const [keyMode, setKeyMode] = useState<KeyMode>("generate");
 	const [keyBase64, setKeyBase64] = useState("");
 	const [keyVisible, setKeyVisible] = useState(false);
-	const [keyError, setKeyError] = useState("");
 
+	const [focusedField, setFocusedField] = useState<
+		"name" | "keyMode" | "key" | "submit"
+	>("name");
 	const [submitting, setSubmitting] = useState(false);
+	const [error, setError] = useState("");
 
-	// toggle key visibility with Ctrl+V
+	// Toggle visibility with Ctrl+T
 	useInput((input, key) => {
-		if (step === "keyInput" && key.ctrl && input.toLowerCase() === "v") {
+		if (key.ctrl && input.toLowerCase() === "t") {
 			setKeyVisible((v) => !v);
+		}
+		if (key.tab) {
+			// Cycle through fields
+			if (focusedField === "name") setFocusedField("keyMode");
+			else if (focusedField === "keyMode")
+				setFocusedField(keyMode === "paste" ? "key" : "submit");
+			else if (focusedField === "key") setFocusedField("submit");
+			else setFocusedField("name");
+		}
+		if (key.escape) {
+			setCurrentScreen("config-selector");
 		}
 	});
 
-	// Validate base64 → exactly 32 bytes
-	const validateKey = (b64: string) => {
+	useEffect(() => {
+		setPageTitle("Create New Configuration");
+		setFooterInstructions(
+			<Box marginTop={1} justifyContent="space-between">
+				<Text dimColor>
+					Tab to navigate • Ctrl+T to toggle key • Esc to cancel
+				</Text>
+			</Box>,
+		);
+		return cleanup;
+	}, [setPageTitle, setFooterInstructions, cleanup]);
+
+	// Auto-generate key when mode is "generate"
+	useEffect(() => {
+		if (keyMode === "generate") {
+			const b64 = crypto.randomBytes(32).toString("base64");
+			setKeyBase64(b64);
+			setKeyVisible(true);
+		} else {
+			setKeyBase64("");
+			setKeyVisible(false);
+		}
+	}, [keyMode]);
+
+	const validateKey = (b64: string): boolean => {
 		try {
 			const buf = Buffer.from((b64 || "").trim(), "base64");
 			return buf.length === 32;
@@ -38,46 +75,26 @@ export default function Create({ onFinish }: { onFinish: () => void }) {
 		}
 	};
 
-	// Handlers
-	const submitName = () => {
-		const n = name.trim();
-		if (!n) {
-			setNameError("Please enter a name ✨");
-			return;
-		}
-		setNameError("");
-		setStep("keyMode");
-	};
+	const handleSubmit = async () => {
+		setError("");
 
-	const onPickMode = ({ value }: { value: "paste" | "auto" | null }) => {
-		setKeyMode(value);
-		if (value === "auto") {
-			const b64 = crypto.randomBytes(32).toString("base64");
-			setKeyBase64(b64);
-			setKeyVisible(true); // Show generated key
-			setStep("review");
-		} else {
-			setStep("keyInput");
-		}
-	};
-
-	const submitKey = () => {
-		const b64 = keyBase64.trim();
-		if (!validateKey(b64)) {
-			setKeyError("Invalid key. Must be base64-encoded 32-byte key (AES-256).");
-			return;
-		}
-		setKeyError("");
-		setStep("review");
-	};
-
-	const doFinish = async () => {
-		setSubmitting(true);
 		const trimmedName = name.trim();
+		if (!trimmedName) {
+			setError("Please enter a configuration name");
+			return;
+		}
+
 		const trimmedKey = keyBase64.trim();
+		if (!trimmedKey || !validateKey(trimmedKey)) {
+			setError(
+				"Invalid encryption key. Must be base64-encoded 32-byte key (AES-256)",
+			);
+			return;
+		}
+
+		setSubmitting(true);
 
 		try {
-			// Create the secretized config structure
 			const config = {
 				$schema:
 					"https://gist.githubusercontent.com/.../v1.secretized-schema.json",
@@ -86,13 +103,11 @@ export default function Create({ onFinish }: { onFinish: () => void }) {
 				secrets: {},
 			};
 
-			// Write to file
 			const fileName = `${trimmedName.toLowerCase()}.secretized.json`;
 			const filePath = path.join(process.cwd(), fileName);
 
 			fs.writeFileSync(filePath, JSON.stringify(config, null, 2), "utf-8");
 
-			// Show success message with key info
 			console.log("\n✓ Configuration created successfully!");
 			console.log(`  File: ${fileName}`);
 			console.log(`\n⚠️  IMPORTANT: Save your encryption key securely!`);
@@ -101,223 +116,187 @@ export default function Create({ onFinish }: { onFinish: () => void }) {
 			console.log(`  export ${trimmedName}_SECRETIZED_KEY="${trimmedKey}"`);
 			console.log("");
 
-			if (onFinish) {
-				await onFinish();
-			}
-		} catch (error) {
-			console.error("Error creating config:", error);
-		} finally {
-			setSubmitting(false);
 			process.exit(0);
+		} catch (err) {
+			setError(
+				`Error creating config: ${err instanceof Error ? err.message : String(err)}`,
+			);
+			setSubmitting(false);
 		}
 	};
 
-	// UI Blocks
 	if (submitting) {
 		return (
-			<Box flexDirection="column" paddingX={2} paddingY={1}>
+			<Box flexDirection="column" paddingY={1}>
 				<Text color="green" bold>
-					✓ All set!
-				</Text>
-				<Text>
-					<Spinner /> Finalizing…
+					✓ Creating configuration...
 				</Text>
 			</Box>
 		);
 	}
 
-	if (step === "name") {
-		return (
-			<WizardCard title="Project Name">
-				<Box>
-					<Text color="magentaBright">❯ </Text>
-					<Text dimColor>Name:</Text>
-					<Box marginLeft={1}>
+	const fileName = name.trim()
+		? `${name.trim().toLowerCase()}.secretized.json`
+		: "";
+	const envVarName = name.trim() ? `${name.trim()}_SECRETIZED_KEY` : "";
+
+	return (
+		<Box flexDirection="column">
+			{/* Name Field */}
+			<Box marginBottom={1}>
+				<Box width={20}>
+					<Text color={focusedField === "name" ? "cyan" : "dim"}>Name:</Text>
+				</Box>
+				<Box flexGrow={1}>
+					{focusedField === "name" ? (
 						<TextInput
 							value={name}
 							onChange={(v) => {
-								setName(v);
-								if (nameError) setNameError("");
+								setName(v.toUpperCase());
+								setError("");
 							}}
-							onSubmit={submitName}
-							placeholder="Type your name…"
+							onSubmit={() => setFocusedField("keyMode")}
+							placeholder="PROJECT_NAME"
 							showCursor
 						/>
-					</Box>
+					) : (
+						<Text color={name ? "white" : "dim"}>{name || "(empty)"}</Text>
+					)}
 				</Box>
-				<HintRow
-					left="Enter to continue"
-					right="No data leaves your terminal ✦"
-				/>
-				{Boolean(nameError) && <ErrorRow msg={nameError} />}
-			</WizardCard>
-		);
-	}
+			</Box>
 
-	if (step === "keyMode") {
-		return (
-			<WizardCard title="AES-256 Key">
-				<Text dimColor>Select how to provide the encryption key:</Text>
-				<Box marginTop={1}>
-					<SelectInput
-						items={[
-							{
-								label: "🔏 Paste existing key (base64, 32-byte)",
-								value: "paste",
-							},
-							{ label: "✨ Generate a new key (recommended)", value: "auto" },
-						]}
-						onSelect={onPickMode}
-					/>
-				</Box>
-				<HintRow left="↑/↓, Enter" right="You can change later" />
-			</WizardCard>
-		);
-	}
-
-	if (step === "keyInput") {
-		return (
-			<WizardCard title="Paste AES-256 Key (base64)">
-				<Text dimColor>
-					The key must decode to exactly 32 bytes. Press{" "}
-					<Text color="cyan">Ctrl+V</Text> to
-					{keyVisible ? " hide" : " show"} while typing.
-				</Text>
-				<Box marginTop={1}>
-					<Text color="cyan">❯ </Text>
-					<Box flexGrow={1}>
-						<TextInput
-							value={keyBase64}
-							onChange={(v) => {
-								setKeyBase64(v);
-								if (keyError) setKeyError("");
-							}}
-							onSubmit={submitKey}
-							placeholder="Base64 key…"
-							showCursor
-							// mask only when hidden
-							mask={keyVisible ? undefined : "•"}
-						/>
-					</Box>
-				</Box>
-				<HintRow left="Enter to validate" right="Ctrl+V toggle visibility" />
-				{Boolean(keyError) && <ErrorRow msg={keyError} />}
-			</WizardCard>
-		);
-	}
-
-	// review
-	if (step === "review") {
-		const b64 = keyBase64.trim();
-		const preview = keyVisible ? b64 : `${b64.slice(0, 6)}…${b64.slice(-6)}`;
-		const fileName = `${name.trim().toLowerCase()}.secretized.json`;
-		const envVarName = `${name.trim()}_SECRETIZED_KEY`;
-
-		return (
-			<WizardCard title="Review & Confirm">
-				<Row label="Name">
-					<Text color="white">{name.trim()}</Text>
-				</Row>
-				<Row label="File">
-					<Text color="white">{fileName}</Text>
-				</Row>
-				<Row label="Key Source">
-					<Text color="white">
-						{keyMode === "auto" ? "Generated" : "Provided"}
+			{/* Key Mode Selection */}
+			<Box marginBottom={1}>
+				<Box width={20}>
+					<Text color={focusedField === "keyMode" ? "cyan" : "dim"}>
+						Key Mode:
 					</Text>
-				</Row>
-				<Row label="Key">
-					<Text color={keyVisible ? "yellow" : "white"}>{preview}</Text>
-				</Row>
-				<Row label="Env Variable">
-					<Text color="cyan">{envVarName}</Text>
-				</Row>
+				</Box>
+				<Box flexGrow={1}>
+					{focusedField === "keyMode" ? (
+						<SelectInput
+							items={[
+								{
+									label: "✨ Generate new key (recommended)",
+									value: "generate",
+								},
+								{ label: "📋 Paste existing key", value: "paste" },
+							]}
+							onSelect={(item) => {
+								setKeyMode(item.value as KeyMode);
+								setFocusedField(item.value === "paste" ? "key" : "submit");
+								setError("");
+							}}
+						/>
+					) : (
+						<Text color="white">
+							{keyMode === "generate"
+								? "✨ Generate new key"
+								: "📋 Paste existing key"}
+						</Text>
+					)}
+				</Box>
+			</Box>
 
-				{keyMode === "auto" && (
-					<Box
-						marginTop={1}
-						paddingX={1}
-						borderStyle="round"
-						borderColor="yellow"
-					>
-						<Text color="yellow">
-							⚠️ Save the key above! It will be shown after creation.
+			{/* Key Input (only if paste mode) */}
+			{keyMode === "paste" && (
+				<Box marginBottom={1}>
+					<Box width={20}>
+						<Text color={focusedField === "key" ? "cyan" : "dim"}>
+							Encryption Key:
 						</Text>
 					</Box>
-				)}
-
-				<Box marginTop={1} justifyContent="space-between">
-					<Text dimColor>Enter to create</Text>
-					<Text dimColor>Ctrl+V to {keyVisible ? "hide" : "show"} key</Text>
+					<Box flexGrow={1}>
+						{focusedField === "key" ? (
+							<TextInput
+								value={keyBase64}
+								onChange={(v) => {
+									setKeyBase64(v);
+									setError("");
+								}}
+								onSubmit={() => setFocusedField("submit")}
+								placeholder="Base64 key (32 bytes)..."
+								showCursor
+								mask={keyVisible ? undefined : "•"}
+							/>
+						) : (
+							<Text color={keyBase64 ? "white" : "dim"}>
+								{keyBase64
+									? keyVisible
+										? keyBase64
+										: `${keyBase64.slice(0, 6)}...${keyBase64.slice(-6)}`
+									: "(empty)"}
+							</Text>
+						)}
+					</Box>
 				</Box>
+			)}
 
-				<ConfirmOnEnter onEnter={doFinish} />
-				<ToggleKeyVisibility setKeyVisible={setKeyVisible} />
-			</WizardCard>
-		);
-	}
+			{/* Key Display (for generated keys) */}
+			{keyMode === "generate" && keyBase64 && (
+				<Box marginBottom={1}>
+					<Box width={20}>
+						<Text color="yellow">Generated Key:</Text>
+					</Box>
+					<Box flexGrow={1}>
+						<Text color="yellow">
+							{keyVisible
+								? keyBase64
+								: `${keyBase64.slice(0, 6)}...${keyBase64.slice(-6)}`}
+						</Text>
+					</Box>
+				</Box>
+			)}
 
-	// Fallback (shouldn't reach)
-	return null;
-}
-
-// ——— Little UI helpers ———
-
-function WizardCard({
-	title,
-	children,
-}: {
-	title: string;
-	children: React.ReactNode;
-}) {
-	return (
-		<Box flexDirection="column" paddingX={2} paddingY={1}>
-			<Box marginBottom={1}>
-				<Text bold color="cyan">
-					{title}
-				</Text>
-			</Box>
+			{/* Preview */}
 			<Box
-				borderStyle="round"
-				borderColor="cyan"
+				marginY={1}
 				paddingX={1}
-				paddingY={1}
+				borderStyle="single"
+				borderColor="gray"
 				flexDirection="column"
 			>
-				{children}
+				<Text dimColor>Preview:</Text>
+				<Box justifyContent="space-between">
+					<Text dimColor>File:</Text>
+					<Text color={fileName ? "white" : "dim"}>{fileName || "N/A"}</Text>
+				</Box>
+				<Box justifyContent="space-between">
+					<Text dimColor>Env Variable:</Text>
+					<Text color={envVarName ? "cyan" : "dim"}>{envVarName || "N/A"}</Text>
+				</Box>
 			</Box>
-		</Box>
-	);
-}
 
-function Row({
-	label,
-	children,
-}: {
-	label: string;
-	children: React.ReactNode;
-}) {
-	return (
-		<Box marginTop={1} justifyContent="space-between">
-			<Text dimColor>{label}</Text>
-			<Box>{children}</Box>
-		</Box>
-	);
-}
+			{/* Submit Button */}
+			<Box marginBottom={1}>
+				<Text color={focusedField === "submit" ? "green" : "dim"} bold>
+					{focusedField === "submit" ? "▶ " : "  "}
+					Press Enter to Create
+				</Text>
+			</Box>
 
-function HintRow({ left, right }: { left: string; right: string }) {
-	return (
-		<Box marginTop={1} justifyContent="space-between">
-			<Text dimColor>{left}</Text>
-			<Text dimColor>{right}</Text>
-		</Box>
-	);
-}
+			{focusedField === "submit" && <ConfirmOnEnter onEnter={handleSubmit} />}
 
-function ErrorRow({ msg }: { msg: string }) {
-	return (
-		<Box marginTop={1}>
-			<Text color="yellow">{msg}</Text>
+			{/* Error Display */}
+			{error && (
+				<Box marginTop={1} paddingX={1} borderStyle="single" borderColor="red">
+					<Text color="red">⚠ {error}</Text>
+				</Box>
+			)}
+
+			{/* Warning for generated keys */}
+			{keyMode === "generate" && (
+				<Box
+					marginTop={1}
+					paddingX={1}
+					borderStyle="round"
+					borderColor="yellow"
+				>
+					<Text color="yellow">
+						⚠️ Save the generated key! It will be displayed after creation.
+					</Text>
+				</Box>
+			)}
 		</Box>
 	);
 }
@@ -325,19 +304,6 @@ function ErrorRow({ msg }: { msg: string }) {
 function ConfirmOnEnter({ onEnter }: { onEnter: () => void }) {
 	useInput((_input, key) => {
 		if (key.return) onEnter();
-	});
-	return null;
-}
-
-function ToggleKeyVisibility({
-	setKeyVisible,
-}: {
-	setKeyVisible: React.Dispatch<React.SetStateAction<boolean>>;
-}) {
-	useInput((input, key) => {
-		if (key.ctrl && input.toLowerCase() === "v") {
-			setKeyVisible((v) => !v);
-		}
 	});
 	return null;
 }
