@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Text, useApp, useInput } from "ink";
+import { Box, Text, useInput } from "ink";
 import TextInput from "ink-text-input";
 import SelectInput from "ink-select-input";
 import Spinner from "ink-spinner";
@@ -7,14 +7,14 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-export default function Create({ onFinish }) {
+export default function Create({ onFinish }: { onFinish: () => void }) {
 	// wizard steps: "name" -> "keyMode" -> "keyInput?" -> "review"
 	const [step, setStep] = useState("name");
 
 	const [name, setName] = useState("");
 	const [nameError, setNameError] = useState("");
 
-	const [keyMode, setKeyMode] = useState(null); // "paste" | "auto"
+	const [keyMode, setKeyMode] = useState<"paste" | "auto" | null>(null); // "paste" | "auto"
 	const [keyBase64, setKeyBase64] = useState("");
 	const [keyVisible, setKeyVisible] = useState(false);
 	const [keyError, setKeyError] = useState("");
@@ -29,7 +29,7 @@ export default function Create({ onFinish }) {
 	});
 
 	// Validate base64 → exactly 32 bytes
-	const validateKey = (b64) => {
+	const validateKey = (b64: string) => {
 		try {
 			const buf = Buffer.from((b64 || "").trim(), "base64");
 			return buf.length === 32;
@@ -49,7 +49,7 @@ export default function Create({ onFinish }) {
 		setStep("keyMode");
 	};
 
-	const onPickMode = ({ value }) => {
+	const onPickMode = ({ value }: { value: "paste" | "auto" | null }) => {
 		setKeyMode(value);
 		if (value === "auto") {
 			const b64 = crypto.randomBytes(32).toString("base64");
@@ -263,7 +263,13 @@ export default function Create({ onFinish }) {
 
 // ——— Little UI helpers ———
 
-function WizardCard({ title, children }) {
+function WizardCard({
+	title,
+	children,
+}: {
+	title: string;
+	children: React.ReactNode;
+}) {
 	return (
 		<Box flexDirection="column" paddingX={2} paddingY={1}>
 			<Box marginBottom={1}>
@@ -284,7 +290,13 @@ function WizardCard({ title, children }) {
 	);
 }
 
-function Row({ label, children }) {
+function Row({
+	label,
+	children,
+}: {
+	label: string;
+	children: React.ReactNode;
+}) {
 	return (
 		<Box marginTop={1} justifyContent="space-between">
 			<Text dimColor>{label}</Text>
@@ -293,7 +305,7 @@ function Row({ label, children }) {
 	);
 }
 
-function HintRow({ left, right }) {
+function HintRow({ left, right }: { left: string; right: string }) {
 	return (
 		<Box marginTop={1} justifyContent="space-between">
 			<Text dimColor>{left}</Text>
@@ -302,7 +314,7 @@ function HintRow({ left, right }) {
 	);
 }
 
-function ErrorRow({ msg }) {
+function ErrorRow({ msg }: { msg: string }) {
 	return (
 		<Box marginTop={1}>
 			<Text color="yellow">{msg}</Text>
@@ -310,14 +322,18 @@ function ErrorRow({ msg }) {
 	);
 }
 
-function ConfirmOnEnter({ onEnter }) {
-	useInput((input, key) => {
+function ConfirmOnEnter({ onEnter }: { onEnter: () => void }) {
+	useInput((_input, key) => {
 		if (key.return) onEnter();
 	});
 	return null;
 }
 
-function ToggleKeyVisibility({ setKeyVisible }) {
+function ToggleKeyVisibility({
+	setKeyVisible,
+}: {
+	setKeyVisible: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
 	useInput((input, key) => {
 		if (key.ctrl && input.toLowerCase() === "v") {
 			setKeyVisible((v) => !v);

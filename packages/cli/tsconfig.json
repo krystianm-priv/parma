@@ -1,17 +1,20 @@
 {
-	"compilerOptions": {
-		"target": "esnext",
-		"module": "nodenext",
-		"moduleResolution": "nodenext",
-		"noEmit": true,
-		"erasableSyntaxOnly": true,
-		"strict": true,
-		"types": ["node", "yargs"],
-		"allowImportingTsExtensions": true,
-		"inlineSourceMap": true,
-		"inlineSources": true,
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "erasableSyntaxOnly": true,
+    "strict": true,
+    "inlineSourceMap": true,
+    "inlineSources": true,
+    "skipLibCheck": true,
+    "baseUrl": "src",
+    "outDir": "dist",
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
 
-		// JSX support for ink
-		"jsx": "react"
-	}
+    // JSX support for ink
+    "jsx": "react"
+  },
+  "include": ["src"]
 }

@@ -1,9 +1,9 @@
-import { render } from "ink";
+import { Box, render, Text, useApp } from "ink";
 import React, { useState } from "react";
-import { Box, Text } from "ink";
-import ConfigSelector from "./screens/config-selector.tsx";
-import Create from "./screens/create.tsx";
-import MainMenu from "./screens/main-menu.tsx";
+
+import ConfigSelector from "./screens/config-selector.js";
+import Create from "./screens/create.js";
+import MainMenu from "./screens/main-menu.js";
 
 const Index = () => {
 	const [configFilePath, setConfigFilePath] = useState<string | null>(null);
@@ -22,10 +22,10 @@ const Index = () => {
 					║
 				</Text>
 				<Text bold color="magenta">
-					PARMA / Secretized
+					{`        PARMA`}
 				</Text>
 				<Text bold color="cyan">
-					║
+					{`                          ║`}
 				</Text>
 			</Box>
 			<Box>
@@ -78,4 +78,15 @@ const Index = () => {
 	);
 };
 
-render(<Index />);
+if (import.meta.main) {
+	render(<Index />);
+}
+
+export default {
+	start() {
+		render(<Index />);
+	},
+	stop() {
+	
+	}
+};

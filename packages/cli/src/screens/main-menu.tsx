@@ -10,7 +10,7 @@ interface MainMenuProps {
 
 export default function MainMenu({ configFilePath, onBack }: MainMenuProps) {
 	const { exit } = useApp();
-	const [config, setConfig] = useState(() => {
+	const [config, _setConfig] = useState(() => {
 		try {
 			const content = fs.readFileSync(configFilePath, "utf-8");
 			return JSON.parse(content);
@@ -23,7 +23,7 @@ export default function MainMenu({ configFilePath, onBack }: MainMenuProps) {
 	const [selectedAction, setSelectedAction] = useState<string | null>(null);
 
 	// Handle Escape key to go back
-	useInput((input, key) => {
+	useInput((_input, key) => {
 		if (key.escape && !selectedAction) {
 			onBack();
 		}
