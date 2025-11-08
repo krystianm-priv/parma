@@ -4,8 +4,8 @@ import React, { useState } from "react";
 import ConfigSelector from "./screens/config-selector.js";
 import Create from "./screens/create.js";
 import MainMenu from "./screens/main-menu.js";
-import Layout from "components/Layout.js";
-import { useCanvasStore } from "utils/canvas.store.js";
+import Layout from "./components/Layout.js";
+import { useCanvasStore } from "./utils/canvas.store.js";
 
 const Router = () => {
 	const { currentScreen } = useCanvasStore();
@@ -27,9 +27,13 @@ const Router = () => {
 };
 
 if (import.meta.main) {
-	render(
+	process.stdout.write("\x1Bc");
+	const { waitUntilExit } = render(
 		<Layout>
 			<Router />
 		</Layout>,
 	);
+
+	await waitUntilExit();
+	process.stdout.write("\x1Bc");
 }

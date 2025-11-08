@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Text, useInput } from "ink";
+import { Box, Text, useApp, useInput } from "ink";
 import TextInput from "ink-text-input";
 import SelectInput from "ink-select-input";
 import crypto from "node:crypto";
@@ -24,6 +24,8 @@ export default function Create() {
 	const [submitting, setSubmitting] = useState(false);
 	const [error, setError] = useState("");
 
+	const app = useApp();
+
 	// Toggle visibility with Ctrl+T
 	useInput((input, key) => {
 		if (key.ctrl && input.toLowerCase() === "t") {
@@ -45,7 +47,7 @@ export default function Create() {
 	useEffect(() => {
 		setPageTitle("Create New Configuration");
 		setFooterInstructions(
-			<Box marginTop={1} justifyContent="space-between">
+			<Box justifyContent="space-between">
 				<Text dimColor>
 					Tab to navigate • Ctrl+T to toggle key • Esc to cancel
 				</Text>
@@ -115,8 +117,7 @@ export default function Create() {
 			console.log(`\n  Set it as environment variable:`);
 			console.log(`  export ${trimmedName}_SECRETIZED_KEY="${trimmedKey}"`);
 			console.log("");
-
-			process.exit(0);
+			app.exit();
 		} catch (err) {
 			setError(
 				`Error creating config: ${err instanceof Error ? err.message : String(err)}`,
@@ -138,7 +139,7 @@ export default function Create() {
 	const fileName = name.trim()
 		? `${name.trim().toLowerCase()}.secretized.json`
 		: "";
-	const envVarName = name.trim() ? `${name.trim()}_SECRETIZED_KEY` : "";
+	const envVarName = name.trim() ? `${name.trim()}_PARMA_KEY` : "";
 
 	return (
 		<Box flexDirection="column">
@@ -288,12 +289,12 @@ export default function Create() {
 			{keyMode === "generate" && (
 				<Box
 					marginTop={1}
-					paddingX={1}
+					paddingX={2}
 					borderStyle="round"
 					borderColor="yellow"
 				>
 					<Text color="yellow">
-						⚠️ Save the generated key! It will be displayed after creation.
+						Save the generated key! It will be displayed after creation.
 					</Text>
 				</Box>
 			)}

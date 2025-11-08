@@ -3,7 +3,7 @@ import SelectInput from "ink-select-input";
 import Spinner from "ink-spinner";
 import { globSync } from "node:fs";
 import React, { useEffect, useState } from "react";
-import { useCanvasStore } from "utils/canvas.store.js";
+import { useCanvasStore } from "../utils/canvas.store.js";
 
 const Instructions = (
 	<Box marginTop={1} justifyContent="space-between">
