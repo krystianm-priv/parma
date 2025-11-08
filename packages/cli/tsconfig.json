@@ -6,7 +6,7 @@
 		"noEmit": true,
 		"erasableSyntaxOnly": true,
 		"strict": true,
-		"types": ["node"],
+		"types": ["node", "yargs"],
 		"allowImportingTsExtensions": true,
 		"inlineSourceMap": true,
 		"inlineSources": true,

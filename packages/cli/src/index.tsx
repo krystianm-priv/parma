@@ -1,19 +1,81 @@
-import { render, Text } from "ink";
-import React from "react";
+import { render } from "ink";
+import React, { useState } from "react";
+import { Box, Text } from "ink";
+import ConfigSelector from "./screens/config-selector.tsx";
+import Create from "./screens/create.tsx";
+import MainMenu from "./screens/main-menu.tsx";
 
-const Example = () => (
-	<>
-		<Text color="green">I am green</Text>
-		<Text color="black" backgroundColor="white">
-			I am black on white
-		</Text>
-		<Text color="#ffffff">I am white</Text>
-		<Text bold>I am bold</Text>
-		<Text italic>I am italic</Text>
-		<Text underline>I am underline</Text>
-		<Text strikethrough>I am strikethrough</Text>
-		<Text inverse>I am inversed</Text>
-	</>
-);
+const Index = () => {
+	const [configFilePath, setConfigFilePath] = useState<string | null>(null);
+	const [create, setCreate] = useState<boolean>(false);
 
-render(<Example />);
+	// Header component
+	const Header = () => (
+		<Box flexDirection="column" marginBottom={1}>
+			<Box>
+				<Text bold color="cyan">
+					╔═══════════════════════════════════════╗
+				</Text>
+			</Box>
+			<Box>
+				<Text bold color="cyan">
+					║
+				</Text>
+				<Text bold color="magenta">
+					PARMA / Secretized
+				</Text>
+				<Text bold color="cyan">
+					║
+				</Text>
+			</Box>
+			<Box>
+				<Text bold color="cyan">
+					╚═══════════════════════════════════════╝
+				</Text>
+			</Box>
+			<Box marginTop={1}>
+				<Text dimColor>
+					Secure secrets management with selective encryption
+				</Text>
+			</Box>
+		</Box>
+	);
+
+	// Flow: Header -> Create OR Selector -> MainMenu
+	if (create) {
+		return (
+			<Box flexDirection="column">
+				<Header />
+				<Create
+					onFinish={() => {
+						setCreate(false);
+					}}
+				/>
+			</Box>
+		);
+	}
+
+	if (!configFilePath) {
+		return (
+			<Box flexDirection="column">
+				<Header />
+				<ConfigSelector
+					setConfigFilePath={setConfigFilePath}
+					setCreate={setCreate}
+				/>
+			</Box>
+		);
+	}
+
+	return (
+		<Box flexDirection="column">
+			<Header />
+			<MainMenu
+				configFilePath={configFilePath}
+				onBack={() => setConfigFilePath(null)}
+			/>
+		</Box>
+	);
+};
+
+render(<Index />);

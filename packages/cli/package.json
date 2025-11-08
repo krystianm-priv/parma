@@ -7,12 +7,16 @@
 	},
 	"dependencies": {
 		"ink": "^6.4.0",
+		"ink-big-text": "^2.0.0",
+		"ink-gradient": "^3.0.0",
+		"ink-select-input": "^6.2.0",
+		"ink-spinner": "^5.0.0",
+		"ink-text-input": "^6.0.0",
 		"react": "^19.2.0",
 		"typescript": "^5.9.3"
 	},
 	"devDependencies": {
 		"@types/node": "^24.10.0",
-		"@types/react": "^19.2.2",
-		"esbuild": "^0.25.12"
+		"@types/react": "^19.2.2"
 	}
 }
