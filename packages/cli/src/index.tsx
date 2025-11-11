@@ -6,6 +6,7 @@ import Create from "./screens/create.js";
 import MainMenu from "./screens/main-menu.js";
 import Layout from "./components/Layout.js";
 import { useCanvasStore } from "./utils/canvas.store.js";
+import LoadPrivateKeyScreen from "./screens/load-private-key.js";
 
 const Router = () => {
 	const { currentScreen } = useCanvasStore();
@@ -17,6 +18,8 @@ const Router = () => {
 			return <Create />;
 		case "main-menu":
 			return <MainMenu />;
+		case "load-private-key":
+			return <LoadPrivateKeyScreen />;
 		default:
 			return (
 				<Box>

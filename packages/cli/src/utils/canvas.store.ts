@@ -13,7 +13,11 @@ interface CanvasStore {
 
 	cleanup: () => void;
 
-	currentScreen: "create" | "config-selector" | "main-menu";
+	currentScreen:
+		| "create"
+		| "config-selector"
+		| "main-menu"
+		| "load-private-key";
 	setCurrentScreen: (screen: CanvasStore["currentScreen"]) => void;
 
 	configFilePath: string | null;

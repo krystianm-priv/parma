@@ -3,15 +3,21 @@ import Header from "./Header.js";
 import { Box, Text, useApp, useInput } from "ink";
 import { useCanvasStore } from "../utils/canvas.store.js";
 import { useSecretizedStore } from "../utils/secretized.store.js";
+import SyntaxHighlight from "ink-syntax-highlight";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-	const { pageTitle, footerInstructions, currentScreen } = useCanvasStore();
+	const { pageTitle, footerInstructions, currentScreen, setCurrentScreen } =
+		useCanvasStore();
 	const { privateKey } = useSecretizedStore();
 	const app = useApp();
 
-	useInput((_, key) => {
+	useInput((char, key) => {
 		if (key.escape) {
 			app.exit();
+		}
+
+		if (key.ctrl && char.toLowerCase() === "l") {
+			setCurrentScreen("load-private-key");
 		}
 	});
 
@@ -38,10 +44,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 					{currentScreen !== "config-selector" &&
 						currentScreen !== "create" &&
 						!privateKey && (
-							<Text color="red" underline bold inverse>
-								The private key has not been loaded, therefore you may only use
-								plain only modes and only read encrypted secrets!
-							</Text>
+							<Box flexDirection="column">
+								<Text color="red" underline bold inverse>
+									The private key has not been loaded, therefore you may only
+									use plain only modes and only read encrypted secrets!
+								</Text>
+
+								<Box gap={1}>
+									<Text>Press</Text>
+									<Text bold underline>
+										Ctrl + L
+									</Text>
+									<Text>to load the private key.</Text>
+								</Box>
+							</Box>
 						)}
 
 					{children}
