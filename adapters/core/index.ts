@@ -55,12 +55,17 @@ export const createAdapter =
 		name: Name;
 		parmaVersion: "1";
 		getPrivateKey: (secretizedName: string) => string;
+		isAvailable: () => boolean;
 	}) =>
 	(userOpts: {
 		secretizedName: Uppercase<string>;
 		cachePrivateKey?: boolean;
 		cacheDecryptedValues?: boolean;
 	}) => {
+		if (!adapterOpts.isAvailable()) {
+			throw new Error(`Adapter ${adapterOpts.name} is not available`);
+		}
+
 		let privateKeyCache: string;
 		const decryptedValuesCache: Record<string, string> = {};
 

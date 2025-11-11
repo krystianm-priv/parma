@@ -1,0 +1,20 @@
+{
+	"name": "@parma/adapter-bitwarden",
+	"version": "1.0.0",
+	"type": "module",
+	"main": "./dist/index.js",
+	"scripts": {
+		"test": "node --test",
+		"dev": "node --watch --test",
+		"build": "tsc --build tsconfig.build.json"
+	},
+	"packageManager": "pnpm@10.20.0",
+	"devDependencies": {
+		"@types/node": "^24.10.0",
+		"typescript": "^5.9.3"
+	},
+	"dependencies": {
+		"@bitwarden/cli": "2025.10.0",
+		"@parma/adapter-core": "workspace:*"
+	}
+}

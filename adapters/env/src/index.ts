@@ -4,6 +4,9 @@ import { createAdapter } from "@parma/adapter-core/dev";
 export const parmaEnvAdapter = createAdapter({
 	name: "env",
 	parmaVersion: "1",
+	isAvailable: () => {
+		return true;
+	},
 	getPrivateKey(secretized_name) {
 		if (typeof secretized_name !== "string") {
 			throw new Error(
@@ -20,3 +23,5 @@ export const parmaEnvAdapter = createAdapter({
 		return value;
 	},
 });
+
+export default parmaEnvAdapter;

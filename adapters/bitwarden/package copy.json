@@ -1,0 +1,19 @@
+{
+	"name": "@parma/adapter-env",
+	"version": "1.0.0",
+	"type": "module",
+	"main": "./dist/index.js",
+	"scripts": {
+		"test": "node --test",
+		"dev": "node --watch --test",
+		"build": "tsc --build tsconfig.build.json"
+	},
+	"packageManager": "pnpm@10.20.0",
+	"devDependencies": {
+		"@types/node": "^24.10.0",
+		"typescript": "^5.9.3"
+	},
+	"dependencies": {
+		"@parma/adapter-core": "workspace:*"
+	}
+}

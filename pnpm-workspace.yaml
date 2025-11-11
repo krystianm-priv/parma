@@ -2,3 +2,9 @@ packages:
   - packages/*
   - examples/*
   - adapters/*
+
+onlyBuiltDependencies:
+  - '@napi-ffi/ffi-napi'
+  - '@napi-ffi/get-symbol-from-current-process-h'
+  - '@napi-ffi/get-uv-event-loop-napi-h'
+  - '@napi-ffi/ref-napi'
