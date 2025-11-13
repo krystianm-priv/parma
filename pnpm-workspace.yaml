@@ -1,7 +1,11 @@
 packages:
-  - packages/*
+  - cli
+  - runtime
   - examples/*
   - adapters/*
+
+ignoredBuiltDependencies:
+  - esbuild
 
 onlyBuiltDependencies:
   - '@napi-ffi/ffi-napi'
