@@ -65,88 +65,112 @@ export interface Adapter<
 	name: Name;
 	version: "1";
 	isAvailable(): boolean;
+	canBeCreated(secretizedName: string): boolean;
 	create: (userOpts: Opts) => {
 		encryptValue: (value: string) => string;
 		decryptValue: (value: string) => string;
 	};
 }
 
-export const createAdapter = <Name extends string>(adapterOpts: {
+export const createAdapter = <
+	Name extends string,
+	Opts extends AdapterOpts<Name>,
+>(adapterOpts: {
 	name: Name;
 	parmaVersion: "1";
 	getPrivateKey: (secretizedName: string) => string;
 	isAvailable: () => boolean;
-}): Adapter<Name> => ({
-	name: adapterOpts.name,
-	version: adapterOpts.parmaVersion,
-	isAvailable: adapterOpts.isAvailable,
-	create: (userOpts: AdapterOpts<Name>) => {
-		if (!adapterOpts.isAvailable()) {
-			throw new Error(
-				`Adapter ${adapterOpts.name} is not available on this platform.`,
-			);
+}): Adapter<Name, Opts> => {
+	const name = adapterOpts.name;
+	const version = adapterOpts.parmaVersion;
+	const isAvailable = adapterOpts.isAvailable;
+	const canBeCreated = (secretizedName: string): boolean => {
+		try {
+			const privateKey = adapterOpts.getPrivateKey(secretizedName);
+			return Boolean(privateKey);
+		} catch {
+			// If any error occurs (i.e., key not found or unusable), return false
+			return false;
 		}
-		let privateKeyCache: string;
-		const decryptedValuesCache: Record<string, string> = {};
+	};
+	return {
+		name,
+		version,
+		isAvailable,
+		canBeCreated,
+		create: (userOpts: AdapterOpts<Name>) => {
+			if (!isAvailable()) {
+				throw new Error(
+					`Adapter ${adapterOpts.name} is not available on this platform.`,
+				);
+			}
+			if (!canBeCreated(userOpts.secretizedName)) {
+				throw new Error(
+					`Adapter ${adapterOpts.name} cannot be created for secretized name "${userOpts.secretizedName}".`,
+				);
+			}
+			let privateKeyCache: string;
+			const decryptedValuesCache: Record<string, string> = {};
 
-		const decrypt =
-			userOpts?.cacheDecryptedValues === true
-				? (((privateKey, value) => {
-						if (decryptedValuesCache[value]) {
-							return decryptedValuesCache[value];
+			const decrypt =
+				userOpts?.cacheDecryptedValues === true
+					? (((privateKey, value) => {
+							if (decryptedValuesCache[value]) {
+								return decryptedValuesCache[value];
+							}
+							const decryptedValue = rawDecrypt(privateKey, value);
+							decryptedValuesCache[value] = decryptedValue;
+							return decryptedValue;
+						}) as typeof rawDecrypt)
+					: rawDecrypt;
+
+			const encrypt =
+				userOpts?.cachePrivateKey === true
+					? (((privateKey, value) => {
+							if (!privateKeyCache) {
+								privateKeyCache = privateKey;
+							}
+							return rawEncrypt(privateKeyCache, value);
+						}) as typeof rawEncrypt)
+					: rawEncrypt;
+
+			const encryptValue =
+				userOpts.cachePrivateKey === true
+					? (value: string) => {
+							if (!privateKeyCache) {
+								privateKeyCache = adapterOpts.getPrivateKey(
+									userOpts.secretizedName,
+								);
+							}
+							return encrypt(privateKeyCache, value);
 						}
-						const decryptedValue = rawDecrypt(privateKey, value);
-						decryptedValuesCache[value] = decryptedValue;
-						return decryptedValue;
-					}) as typeof rawDecrypt)
-				: rawDecrypt;
-
-		const encrypt =
-			userOpts?.cachePrivateKey === true
-				? (((privateKey, value) => {
-						if (!privateKeyCache) {
-							privateKeyCache = privateKey;
-						}
-						return rawEncrypt(privateKeyCache, value);
-					}) as typeof rawEncrypt)
-				: rawEncrypt;
-
-		const encryptValue =
-			userOpts.cachePrivateKey === true
-				? (value: string) => {
-						if (!privateKeyCache) {
-							privateKeyCache = adapterOpts.getPrivateKey(
-								userOpts.secretizedName,
+					: (value: string) => {
+							return encrypt(
+								adapterOpts.getPrivateKey(userOpts.secretizedName),
+								value,
 							);
+						};
+			const decryptValue =
+				userOpts.cachePrivateKey === true
+					? (value: string) => {
+							if (!privateKeyCache) {
+								privateKeyCache = adapterOpts.getPrivateKey(
+									userOpts.secretizedName,
+								);
+							}
+							return decrypt(privateKeyCache, value);
 						}
-						return encrypt(privateKeyCache, value);
-					}
-				: (value: string) => {
-						return encrypt(
-							adapterOpts.getPrivateKey(userOpts.secretizedName),
-							value,
-						);
-					};
-		const decryptValue =
-			userOpts.cachePrivateKey === true
-				? (value: string) => {
-						if (!privateKeyCache) {
-							privateKeyCache = adapterOpts.getPrivateKey(
-								userOpts.secretizedName,
+					: (value: string) => {
+							return decrypt(
+								adapterOpts.getPrivateKey(userOpts.secretizedName),
+								value,
 							);
-						}
-						return decrypt(privateKeyCache, value);
-					}
-				: (value: string) => {
-						return decrypt(
-							adapterOpts.getPrivateKey(userOpts.secretizedName),
-							value,
-						);
-					};
+						};
 
-		return {
-			encryptValue,
-			decryptValue,
-		};
-	},
-});
+			return {
+				encryptValue,
+				decryptValue,
+			};
+		},
+	};
+};

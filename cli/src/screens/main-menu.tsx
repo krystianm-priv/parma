@@ -1,26 +1,15 @@
-import React, { useState, useEffect } from "react";
 import { Box, Text, useApp, useInput } from "ink";
 import SelectInput from "ink-select-input";
-import fs from "node:fs";
+import React, { useState, useEffect } from "react";
 import { useCanvasStore } from "../utils/canvas.store.js";
-
-interface Config {
-	"#version": number;
-	"#name": string;
-	secrets: Record<string, Record<string, any>>;
-}
+import { useSecretizedStore } from "../utils/secretized.store.js";
 
 export default function MainMenu() {
 	const { exit } = useApp();
-	const {
-		configFilePath,
-		setPageTitle,
-		setFooterInstructions,
-		cleanup,
-		setCurrentScreen,
-	} = useCanvasStore();
+	const { setPageTitle, setFooterInstructions, cleanup, setCurrentScreen } =
+		useCanvasStore();
+	const { configFilePath, secretizedSecrets } = useSecretizedStore();
 
-	const [config, setConfig] = useState<Config | null>(null);
 	const [selectedAction, setSelectedAction] = useState<string | null>(null);
 
 	useEffect(() => {
@@ -28,19 +17,11 @@ export default function MainMenu() {
 			setCurrentScreen("config-selector");
 			return;
 		}
-
-		try {
-			const content = fs.readFileSync(configFilePath, "utf-8");
-			setConfig(JSON.parse(content));
-		} catch (error) {
-			console.error("Error loading config:", error);
-			setConfig(null);
-		}
 	}, [configFilePath, setCurrentScreen]);
 
 	useEffect(() => {
-		if (config) {
-			setPageTitle(`Configuration: ${config["#name"]}`);
+		if (secretizedSecrets) {
+			setPageTitle(`Configuration: ${secretizedSecrets["#name"]}`);
 			setFooterInstructions(
 				<Box marginTop={1} justifyContent="space-between">
 					<Text dimColor>↑/↓ Navigate • Enter to select</Text>
@@ -49,7 +30,7 @@ export default function MainMenu() {
 			);
 		}
 		return cleanup;
-	}, [config, setPageTitle, setFooterInstructions, cleanup]);
+	}, [secretizedSecrets, setPageTitle, setFooterInstructions, cleanup]);
 
 	useInput((_input, key) => {
 		if (key.escape && !selectedAction) {
@@ -57,22 +38,23 @@ export default function MainMenu() {
 		}
 	});
 
-	if (!config) {
+	if (!secretizedSecrets) {
 		return (
-			<Box flexDirection="column" paddingY={1}>
-				<Text color="red">✗ Failed to load configuration file</Text>
+			<Box>
+				<Text color="red">✗ Failed to load secretized secrets</Text>
 			</Box>
 		);
 	}
 
-	const secretCount = Object.keys(config.secrets || {}).reduce(
+	const secretCount = Object.keys(secretizedSecrets.secrets).reduce(
 		(acc, category) => {
-			return acc + Object.keys(config.secrets[category] || {}).length;
+			return acc + Object.keys(secretizedSecrets.secrets[category]).length;
 		},
 		0,
 	);
 
-	const categoryCount = Object.keys(config.secrets || {}).length;
+	// TODO: enable when features are implemented
+	// const categoryCount = Object.keys(secretizedSecrets.secrets).length;
 
 	const menuItems = [
 		{

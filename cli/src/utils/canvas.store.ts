@@ -19,9 +19,6 @@ interface CanvasStore {
 		| "main-menu"
 		| "load-private-key";
 	setCurrentScreen: (screen: CanvasStore["currentScreen"]) => void;
-
-	configFilePath: string | null;
-	setConfigFilePath: (path: string | null) => void;
 }
 
 export const useCanvasStore = create<CanvasStore>((set) => ({
@@ -43,7 +40,4 @@ export const useCanvasStore = create<CanvasStore>((set) => ({
 	currentScreen: "config-selector",
 	setCurrentScreen: (screen: CanvasStore["currentScreen"]) =>
 		set({ currentScreen: screen }),
-
-	configFilePath: null,
-	setConfigFilePath: (path: string | null) => set({ configFilePath: path }),
 }));

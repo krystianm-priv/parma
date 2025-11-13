@@ -14,19 +14,6 @@ importers:
       turbo:
         specifier: ^2.6.0
         version: 2.6.0
-
-  adapters/auto:
-    dependencies:
-      '@parma/adapter-bitwarden':
-        specifier: workspace:*
-        version: link:../bitwarden
-      '@parma/adapter-env':
-        specifier: workspace:*
-        version: link:../env
-      '@parma/adapter-win-cred':
-        specifier: workspace:*
-        version: link:../win-cred
-    devDependencies:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -69,6 +56,25 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  adapters/utils:
+    dependencies:
+      '@parma/adapter-bitwarden':
+        specifier: workspace:*
+        version: link:../bitwarden
+      '@parma/adapter-core':
+        specifier: workspace:*
+        version: link:../core
+      '@parma/adapter-env':
+        specifier: workspace:*
+        version: link:../env
+      '@parma/adapter-win-cred':
+        specifier: workspace:*
+        version: link:../win-cred
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   adapters/win-cred:
     dependencies:
       '@napi-ffi/ffi-napi':
@@ -93,6 +99,12 @@ importers:
 
   cli:
     dependencies:
+      '@parma/adapter-core':
+        specifier: workspace:*
+        version: link:../adapters/core
+      '@parma/adapter-utils':
+        specifier: workspace:*
+        version: link:../adapters/utils
       ink:
         specifier: ^6.4.0
         version: 6.4.0(@types/react@19.2.2)(react@19.2.0)
@@ -115,8 +127,11 @@ importers:
         specifier: ^6.0.0
         version: 6.0.0(ink@6.4.0(@types/react@19.2.2)(react@19.2.0))(react@19.2.0)
       react:
-        specifier: ^19.2.0
+        specifier: 19.2.0
         version: 19.2.0
+      zod:
+        specifier: ^4.1.12
+        version: 4.1.12
       zustand:
         specifier: ^5.0.8
         version: 5.0.8(@types/react@19.2.2)(react@19.2.0)
@@ -130,9 +145,6 @@ importers:
       tsx:
         specifier: ^4.20.6
         version: 4.20.6
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
 
   examples/basic:
     dependencies:
@@ -1651,6 +1663,9 @@ packages:
   yoga-layout@3.2.1:
     resolution: {integrity: sha512-0LPOt3AxKqMdFBZA3HBAt/t/8vIKq7VaQYbuA8WxCgung+p9TVyKRYdpvCb80HcdTN2NkbIKbhNwKUfm3tQywQ==}
 
+  zod@4.1.12:
+    resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
+
   zustand@5.0.8:
     resolution: {integrity: sha512-gyPKpIaxY9XcO2vSMrLbiER7QMAMGOQZVRdJ6Zi782jkbzZygq5GI9nG8g+sMgitRtndwaBSl7uiqC49o1SSiw==}
     engines: {node: '>=12.20.0'}
@@ -3125,6 +3140,8 @@ snapshots:
   ylru@1.4.0: {}
 
   yoga-layout@3.2.1: {}
+
+  zod@4.1.12: {}
 
   zustand@5.0.8(@types/react@19.2.2)(react@19.2.0):
     optionalDependencies:

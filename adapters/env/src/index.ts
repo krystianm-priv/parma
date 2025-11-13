@@ -16,7 +16,7 @@ export const parmaEnvAdapter = createAdapter({
 		if (!secretized_name) {
 			throw new Error(`Secretized name cannot be empty`);
 		}
-		const value = env[secretized_name];
+		const value = env[`${secretized_name.toUpperCase()}_PARMA_KEY`];
 		if (!value) {
 			throw new Error(`Environment variable ${secretized_name} not found`);
 		}

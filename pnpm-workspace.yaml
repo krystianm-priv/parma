@@ -12,3 +12,4 @@ onlyBuiltDependencies:
   - '@napi-ffi/get-symbol-from-current-process-h'
   - '@napi-ffi/get-uv-event-loop-napi-h'
   - '@napi-ffi/ref-napi'
+  - core-js

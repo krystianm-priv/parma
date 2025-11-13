@@ -1,5 +1,7 @@
-import { Box, render, Text, useApp } from "ink";
-import React, { useState } from "react";
+process.env.TEST_PARMA_KEY = "AJCize7cAOkB3P/n5HVHA/QuG8oL26CdzO5hOSw4mIk=";
+
+import { Box, render, Text } from "ink";
+import React from "react";
 
 import ConfigSelector from "./screens/config-selector.js";
 import Create from "./screens/create.js";

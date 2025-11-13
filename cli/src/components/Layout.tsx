@@ -3,12 +3,11 @@ import Header from "./Header.js";
 import { Box, Text, useApp, useInput } from "ink";
 import { useCanvasStore } from "../utils/canvas.store.js";
 import { useSecretizedStore } from "../utils/secretized.store.js";
-import SyntaxHighlight from "ink-syntax-highlight";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
 	const { pageTitle, footerInstructions, currentScreen, setCurrentScreen } =
 		useCanvasStore();
-	const { privateKey } = useSecretizedStore();
+	const { adapter } = useSecretizedStore();
 	const app = useApp();
 
 	useInput((char, key) => {
@@ -22,7 +21,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 	});
 
 	return (
-		<Box flexDirection="column">
+		<Box flexDirection="column" padding={1} gap={1}>
 			<Header />
 
 			<Box flexDirection="column">
@@ -41,9 +40,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 						</Box>
 					)}
 
-					{currentScreen !== "config-selector" &&
-						currentScreen !== "create" &&
-						!privateKey && (
+					{!(
+						[
+							"config-selector",
+							"create",
+							"load-private-key",
+						] as (typeof currentScreen)[]
+					).includes(currentScreen) &&
+						!adapter && (
 							<Box flexDirection="column">
 								<Text color="red" underline bold inverse>
 									The private key has not been loaded, therefore you may only

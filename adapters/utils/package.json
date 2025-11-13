@@ -13,6 +13,7 @@
 	},
 	"dependencies": {
 		"@parma/adapter-bitwarden": "workspace:*",
+		"@parma/adapter-core": "workspace:*",
 		"@parma/adapter-env": "workspace:*",
 		"@parma/adapter-win-cred": "workspace:*"
 	},

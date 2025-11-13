@@ -4,6 +4,9 @@ import Spinner from "ink-spinner";
 import { globSync } from "node:fs";
 import React, { useEffect, useState } from "react";
 import { useCanvasStore } from "../utils/canvas.store.js";
+import { useSecretizedStore } from "../utils/secretized.store.js";
+import path from "node:path";
+import { cwd } from "node:process";
 
 const Instructions = (
 	<Box marginTop={1} justifyContent="space-between">
@@ -14,13 +17,9 @@ const Instructions = (
 
 export default function ConfigSelector() {
 	const [candidates, setCandidates] = useState<string[] | null>(null);
-	const {
-		setPageTitle,
-		setFooterInstructions,
-		cleanup,
-		setCurrentScreen,
-		setConfigFilePath,
-	} = useCanvasStore();
+	const { setPageTitle, setFooterInstructions, cleanup, setCurrentScreen } =
+		useCanvasStore();
+	const { setConfigFilePath } = useSecretizedStore();
 
 	useEffect(() => {
 		setCandidates(globSync("*.secretized.json"));
@@ -85,7 +84,7 @@ export default function ConfigSelector() {
 					if (selection.value === "__CREATE__") {
 						setCurrentScreen("create");
 					} else {
-						setConfigFilePath(selection.value);
+						setConfigFilePath(path.resolve(cwd(), selection.value));
 						setCurrentScreen("main-menu");
 					}
 				}}
