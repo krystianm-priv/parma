@@ -1,12 +1,13 @@
 {
-	"name": "@parma/adapter-env",
+	"name": "@parma/adapter-win-cred",
 	"version": "1.0.0",
 	"type": "module",
 	"main": "./dist/index.js",
 	"scripts": {
 		"test": "node --test",
 		"dev": "node --watch --test",
-		"build": "tsc --build tsconfig.build.json"
+		"build": "tsc --build tsconfig.build.json",
+    "parma-win-cred": "node ./dist/cli.js"
 	},
 	"packageManager": "pnpm@10.20.0",
 	"devDependencies": {
@@ -14,6 +15,9 @@
 		"typescript": "^5.9.3"
 	},
 	"dependencies": {
+		"@napi-ffi/ffi-napi": "^4.0.3",
+		"@napi-ffi/ref-napi": "^3.0.5",
+		"@napi-ffi/ref-struct-di": "^1.1.1",
 		"@parma/adapter-core": "workspace:*"
 	}
 }
