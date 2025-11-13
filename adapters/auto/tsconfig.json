@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+		"outDir": "./dist",
+		"rootDir": "./src",
+		"strict": true,
+		"erasableSyntaxOnly": true,
+		"module": "nodenext",
+		"moduleResolution": "nodenext",
+		"target": "esnext",
+		"lib": ["ESNext"],
+		"inlineSourceMap": true
+	},
+	"include": ["src"]
+}

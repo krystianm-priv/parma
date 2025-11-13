@@ -1,5 +1,5 @@
+import { createAdapter } from "@parma/adapter-core";
 import { env } from "node:process";
-import { createAdapter } from "@parma/adapter-core/dev";
 
 export const parmaEnvAdapter = createAdapter({
 	name: "env",

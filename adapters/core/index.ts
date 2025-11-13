@@ -1,7 +1,7 @@
 import {
-	createHash,
 	createCipheriv,
 	createDecipheriv,
+	createHash,
 	randomBytes,
 } from "node:crypto";
 
@@ -47,25 +47,32 @@ const rawEncrypt = (privateKey: string, data: string) => {
 	const authTag = cipher.getAuthTag();
 
 	// Return format: iv:authTag:encryptedData (all in hex)
-	return `${iv.toString("hex")}:${authTag.toString("hex")}:${encrypted.toString("hex")}`;
+	return `${iv.toString("hex")}:${authTag.toString("hex")}:${encrypted.toString(
+		"hex",
+	)}`;
 };
 
-export const createAdapter =
-	<Name extends string>(adapterOpts: {
-		name: Name;
-		parmaVersion: "1";
-		getPrivateKey: (secretizedName: string) => string;
-		isAvailable: () => boolean;
-	}) =>
-	(userOpts: {
-		secretizedName: Uppercase<string>;
-		cachePrivateKey?: boolean;
-		cacheDecryptedValues?: boolean;
-	}) => {
-		if (!adapterOpts.isAvailable()) {
-			throw new Error(`Adapter ${adapterOpts.name} is not available`);
-		}
+export interface AdapterOpts<Name extends string> {
+	secretizedName: Name;
+	cachePrivateKey?: boolean;
+	cacheDecryptedValues?: boolean;
+}
 
+export const createAdapter = <Name extends string>(adapterOpts: {
+	name: Name;
+	parmaVersion: "1";
+	getPrivateKey: (secretizedName: string) => string;
+	isAvailable: () => boolean;
+}) => ({
+	name: adapterOpts.name,
+	version: adapterOpts.parmaVersion,
+	isAvailable: adapterOpts.isAvailable,
+	create: (userOpts: AdapterOpts<Name>) => {
+		if (!adapterOpts.isAvailable()) {
+			throw new Error(
+				`Adapter ${adapterOpts.name} is not available on this platform.`,
+			);
+		}
 		let privateKeyCache: string;
 		const decryptedValuesCache: Record<string, string> = {};
 
@@ -91,40 +98,42 @@ export const createAdapter =
 					}) as typeof rawEncrypt)
 				: rawEncrypt;
 
+		const encryptValue =
+			userOpts.cachePrivateKey === true
+				? (value: string) => {
+						if (!privateKeyCache) {
+							privateKeyCache = adapterOpts.getPrivateKey(
+								userOpts.secretizedName,
+							);
+						}
+						return encrypt(privateKeyCache, value);
+					}
+				: (value: string) => {
+						return encrypt(
+							adapterOpts.getPrivateKey(userOpts.secretizedName),
+							value,
+						);
+					};
+		const decryptValue =
+			userOpts.cachePrivateKey === true
+				? (value: string) => {
+						if (!privateKeyCache) {
+							privateKeyCache = adapterOpts.getPrivateKey(
+								userOpts.secretizedName,
+							);
+						}
+						return decrypt(privateKeyCache, value);
+					}
+				: (value: string) => {
+						return decrypt(
+							adapterOpts.getPrivateKey(userOpts.secretizedName),
+							value,
+						);
+					};
+
 		return {
-			name: adapterOpts.name,
-			version: adapterOpts.parmaVersion,
-			encryptValue:
-				userOpts.cachePrivateKey === true
-					? (value: string) => {
-							if (!privateKeyCache) {
-								privateKeyCache = adapterOpts.getPrivateKey(
-									userOpts.secretizedName,
-								);
-							}
-							return encrypt(privateKeyCache, value);
-						}
-					: (value: string) => {
-							return encrypt(
-								adapterOpts.getPrivateKey(userOpts.secretizedName),
-								value,
-							);
-						},
-			decryptValue:
-				userOpts.cachePrivateKey === true
-					? (value: string) => {
-							if (!privateKeyCache) {
-								privateKeyCache = adapterOpts.getPrivateKey(
-									userOpts.secretizedName,
-								);
-							}
-							return decrypt(privateKeyCache, value);
-						}
-					: (value: string) => {
-							return decrypt(
-								adapterOpts.getPrivateKey(userOpts.secretizedName),
-								value,
-							);
-						},
+			encryptValue,
+			decryptValue,
 		};
-	};
+	},
+});

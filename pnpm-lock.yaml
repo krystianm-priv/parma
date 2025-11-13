@@ -15,6 +15,22 @@ importers:
         specifier: ^2.6.0
         version: 2.6.0
 
+  adapters/auto:
+    dependencies:
+      '@parma/adapter-bitwarden':
+        specifier: workspace:*
+        version: link:../bitwarden
+      '@parma/adapter-env':
+        specifier: workspace:*
+        version: link:../env
+      '@parma/adapter-win-cred':
+        specifier: workspace:*
+        version: link:../win-cred
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   adapters/bitwarden:
     dependencies:
       '@bitwarden/cli':
@@ -128,7 +144,11 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
-  runtime: {}
+  runtime:
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
 packages:
 

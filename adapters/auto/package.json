@@ -1,0 +1,18 @@
+{
+	"name": "@parma/adapter-utils",
+	"version": "1.0.0",
+	"packageManager": "pnpm@10.20.0",
+	"scripts": {
+		"test": "node --test",
+		"dev": "node --watch --test",
+		"build": "tsc"
+	},
+	"dependencies": {
+		"@parma/adapter-bitwarden": "workspace:*",
+		"@parma/adapter-env": "workspace:*",
+		"@parma/adapter-win-cred": "workspace:*"
+	},
+	"devDependencies": {
+		"typescript": "^5.9.3"
+	}
+}

@@ -2,14 +2,10 @@
 	"name": "@parma/adapter-core",
 	"version": "1.0.0",
 	"type": "module",
-	"exports": {
-		".": {
-			"import": "./index.js",
-			"types": "./index.d.ts"
-		},
-		"./dev": "./index.ts"
+	"main": "./dist/index.js",
+	"scripts": {
+		"build": "tsc"
 	},
-	"scripts": {},
 	"packageManager": "pnpm@10.20.0",
 	"devDependencies": {
 		"@types/node": "^24.10.0",

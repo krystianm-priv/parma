@@ -1,7 +1,7 @@
+import { createAdapter } from "@parma/adapter-core";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createAdapter } from "@parma/adapter-core/dev";
 
 const bwCliPkgJsonPath = import.meta.resolve("@bitwarden/cli/package.json");
 const { default: bwCliPkgJson } = await import(bwCliPkgJsonPath, {

@@ -7,7 +7,7 @@
 		"test": "node --test",
 		"dev": "node --watch --test",
 		"build": "tsc --build tsconfig.build.json",
-    "parma-win-cred": "node ./dist/cli.js"
+		"parma-win-cred": "node ./dist/cli.js"
 	},
 	"packageManager": "pnpm@10.20.0",
 	"devDependencies": {
