@@ -2,6 +2,10 @@
 	"name": "@parma/adapter-utils",
 	"version": "1.0.0",
 	"packageManager": "pnpm@10.20.0",
+	"type": "module",
+	"exports": {
+		".": "./dist/index.js"
+	},
 	"scripts": {
 		"test": "node --test",
 		"dev": "node --watch --test",

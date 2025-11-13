@@ -3,7 +3,7 @@ import { createAdapter } from "@parma/adapter-core";
 import { getSecret } from "./win-cred.js";
 
 export const parmaWinCredAdapter = createAdapter({
-	name: "env",
+	name: "win-cred",
 	parmaVersion: "1",
 	isAvailable: () => {
 		return platform() === "win32";

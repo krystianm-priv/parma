@@ -58,12 +58,25 @@ export interface AdapterOpts<Name extends string> {
 	cacheDecryptedValues?: boolean;
 }
 
+export interface Adapter<
+	Name extends string,
+	Opts extends AdapterOpts<Name> = AdapterOpts<Name>,
+> {
+	name: Name;
+	version: "1";
+	isAvailable(): boolean;
+	create: (userOpts: Opts) => {
+		encryptValue: (value: string) => string;
+		decryptValue: (value: string) => string;
+	};
+}
+
 export const createAdapter = <Name extends string>(adapterOpts: {
 	name: Name;
 	parmaVersion: "1";
 	getPrivateKey: (secretizedName: string) => string;
 	isAvailable: () => boolean;
-}) => ({
+}): Adapter<Name> => ({
 	name: adapterOpts.name,
 	version: adapterOpts.parmaVersion,
 	isAvailable: adapterOpts.isAvailable,

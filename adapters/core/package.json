@@ -2,7 +2,9 @@
 	"name": "@parma/adapter-core",
 	"version": "1.0.0",
 	"type": "module",
-	"main": "./dist/index.js",
+	"exports": {
+		".": "./dist/index.js"
+	},
 	"scripts": {
 		"build": "tsc"
 	},

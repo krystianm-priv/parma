@@ -8,7 +8,8 @@
 		"moduleResolution": "nodenext",
 		"target": "esnext",
 		"lib": ["ESNext"],
-		"inlineSourceMap": true
+		"inlineSourceMap": true,
+		"declaration": true
 	},
 	"include": ["src"]
 }
