@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type * as screens from "../screens/index.js";
 
 interface CanvasStore {
 	pageTitle: string;
@@ -13,11 +14,7 @@ interface CanvasStore {
 
 	cleanup: () => void;
 
-	currentScreen:
-		| "create"
-		| "config-selector"
-		| "main-menu"
-		| "load-private-key";
+	currentScreen: keyof typeof screens;
 	setCurrentScreen: (screen: CanvasStore["currentScreen"]) => void;
 }
 
@@ -37,7 +34,7 @@ export const useCanvasStore = create<CanvasStore>((set) => ({
 		set({ pageTitle: "", footerInstructions: null });
 	},
 
-	currentScreen: "config-selector",
+	currentScreen: "ConfigSelector",
 	setCurrentScreen: (screen: CanvasStore["currentScreen"]) =>
 		set({ currentScreen: screen }),
 }));

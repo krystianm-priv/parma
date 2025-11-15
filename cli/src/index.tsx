@@ -3,31 +3,29 @@ process.env.TEST_PARMA_KEY = "AJCize7cAOkB3P/n5HVHA/QuG8oL26CdzO5hOSw4mIk=";
 import { Box, render, Text } from "ink";
 import React from "react";
 
-import ConfigSelector from "./screens/config-selector.js";
-import Create from "./screens/create.js";
-import MainMenu from "./screens/main-menu.js";
 import Layout from "./components/Layout.js";
 import { useCanvasStore } from "./utils/canvas.store.js";
-import LoadPrivateKeyScreen from "./screens/load-private-key.js";
+import * as screens from "./screens/index.js";
+import { useAlertStore } from "./utils/alert.store.js";
+import Alert from "./components/Alert.js";
 
 const Router = () => {
 	const { currentScreen } = useCanvasStore();
 
-	switch (currentScreen) {
-		case "config-selector":
-			return <ConfigSelector />;
-		case "create":
-			return <Create />;
-		case "main-menu":
-			return <MainMenu />;
-		case "load-private-key":
-			return <LoadPrivateKeyScreen />;
-		default:
-			return (
-				<Box>
-					<Text>Unregistered screen - please just exit</Text>
-				</Box>
-			);
+	const { hasAlerts } = useAlertStore();
+
+	if (hasAlerts()) {
+		return <Alert />;
+	} else if (currentScreen in screens) {
+		// biome-ignore lint/performance/noDynamicNamespaceImportAccess: that's fine
+		const ScreenComponent = screens[currentScreen];
+		return <ScreenComponent />;
+	} else {
+		return (
+			<Box>
+				<Text>Unregistered screen - please just exit</Text>
+			</Box>
+		);
 	}
 };
 

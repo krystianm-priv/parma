@@ -21,6 +21,8 @@ interface AlertStore {
 		message: string;
 	} & (Promisified | Removable))[];
 
+	hasAlerts: () => boolean;
+
 	addAlert: (
 		alertType: "promisified" | "removable",
 		type: AlertStore["alerts"][number]["type"],
@@ -28,25 +30,23 @@ interface AlertStore {
 	) => Promise<void>;
 }
 
-export const useAlertStore = create<AlertStore>((set) => ({
+export const useAlertStore = create<AlertStore>((set, get) => ({
 	alerts: [],
+	hasAlerts: () => get().alerts.length > 0,
 	addAlert: async (alertType, type, message) => {
 		if (alertType === "removable") {
+			const alertToAdd: AlertStore["alerts"][number] = {
+				alertType,
+				type,
+				message,
+				remove() {
+					set((state) => ({
+						alerts: state.alerts.filter((a) => a !== alertToAdd),
+					}));
+				},
+			};
 			set((state) => ({
-				alerts: [
-					{
-						alertType,
-						type,
-						message,
-						remove() {
-							set((state) => ({
-								...state,
-								// alerts: state.alerts.filter((a) => a !== alert),
-							}));
-						},
-					},
-					...state.alerts,
-				],
+				alerts: [alertToAdd, ...state.alerts],
 			}));
 		} else {
 			let resolve: (value: void | PromiseLike<void>) => void;

@@ -16,7 +16,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 		}
 
 		if (key.ctrl && char.toLowerCase() === "l") {
-			setCurrentScreen("load-private-key");
+			setCurrentScreen("LoadPrivateKeyScreen");
 		}
 	});
 
@@ -42,9 +42,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
 					{!(
 						[
-							"config-selector",
-							"create",
-							"load-private-key",
+							"ConfigSelector",
+							"Create",
+							"LoadPrivateKeyScreen",
 						] as (typeof currentScreen)[]
 					).includes(currentScreen) &&
 						!adapter && (

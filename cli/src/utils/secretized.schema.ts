@@ -7,7 +7,7 @@ import { z } from "zod";
 // Base64-encoded encrypted value
 const encryptedValueSchema = z
 	.string()
-	.regex(/^[A-Za-z0-9+/=]+$/, "Invalid Base64 ciphertext");
+	.regex(/^[A-Za-z0-9+/=:]+$/, "Invalid Base64 ciphertext");
 
 // Fully recursive plain_value definition
 const plainValueSchema: z.ZodType<unknown> = z.lazy(() =>
@@ -35,8 +35,20 @@ const labelsSchema = z.record(
    ============================================================ */
 
 const plainSecretSchema = z.object({
-	kind: z.literal("plain"),
+	kind: z.literal("utf8"),
 	value: plainValueSchema,
+	labels: labelsSchema.optional(),
+});
+
+const plainHexSecretSchema = z.object({
+	kind: z.literal("hex"),
+	value: z.string().regex(/^(?:[0-9a-fA-F]{2})+$/, "Invalid hex string"),
+	labels: labelsSchema.optional(),
+});
+
+const plainBase64SecretSchema = z.object({
+	kind: z.literal("base64"),
+	value: z.string().regex(/^[A-Za-z0-9+/=]+$/, "Invalid Base64 string"),
 	labels: labelsSchema.optional(),
 });
 
@@ -46,7 +58,12 @@ const encryptedSecretSchema = z.object({
 	labels: labelsSchema.optional(),
 });
 
-const secretValueSchema = z.union([plainSecretSchema, encryptedSecretSchema]);
+const secretValueSchema = z.union([
+	plainSecretSchema,
+	plainHexSecretSchema,
+	plainBase64SecretSchema,
+	encryptedSecretSchema,
+]);
 
 /* ============================================================
    secrets: patternProperties

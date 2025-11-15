@@ -37,7 +37,7 @@ export default function LoadPrivateKeyScreen() {
 			<SelectInput
 				onSelect={(selectedAdapter) => {
 					setAdapter(selectedAdapter.value);
-					setCurrentScreen("main-menu");
+					setCurrentScreen("MainMenu");
 				}}
 				items={availableAdapters.map((adapter) => ({
 					label: adapter.name,

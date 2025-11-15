@@ -3,6 +3,7 @@ import SelectInput from "ink-select-input";
 import React, { useState, useEffect } from "react";
 import { useCanvasStore } from "../utils/canvas.store.js";
 import { useSecretizedStore } from "../utils/secretized.store.js";
+import * as screens from "../screens/index.js";
 
 export default function MainMenu() {
 	const { exit } = useApp();
@@ -14,7 +15,7 @@ export default function MainMenu() {
 
 	useEffect(() => {
 		if (!configFilePath) {
-			setCurrentScreen("config-selector");
+			setCurrentScreen("ConfigSelector");
 			return;
 		}
 	}, [configFilePath, setCurrentScreen]);
@@ -34,7 +35,7 @@ export default function MainMenu() {
 
 	useInput((_input, key) => {
 		if (key.escape && !selectedAction) {
-			setCurrentScreen("config-selector");
+			setCurrentScreen("ConfigSelector");
 		}
 	});
 
@@ -53,44 +54,43 @@ export default function MainMenu() {
 		0,
 	);
 
-	// TODO: enable when features are implemented
-	// const categoryCount = Object.keys(secretizedSecrets.secrets).length;
-
-	const menuItems = [
+	const menuItems: Array<{
+		label: string;
+		value: keyof typeof screens | "exit" | "back";
+	}> = [
 		{
 			label: `📝 Add Secret`,
-			value: "add-secret",
-			disabled: true,
+			value: "AddSecretScreen",
 		},
 		{
 			label: "🔣 Edit Secret",
-			value: "edit-secret",
-			disabled: true,
+			// @ts-expect-error coming soon
+			value: "EditSecretScreen",
 		},
 		{
 			label: "🔍 View Secrets",
-			value: "view-secrets",
-			disabled: true,
+			// @ts-expect-error coming soon
+			value: "ViewSecretsScreen",
 		},
 		{
 			label: "🔥 Delete Secret",
-			value: "delete-secret",
-			disabled: true,
+			// @ts-expect-error coming soon
+			value: "DeleteSecretScreen",
 		},
 		{
 			label: "🔑 Change Encryption Key",
-			value: "change-key",
-			disabled: true,
+			// @ts-expect-error coming soon
+			value: "ChangeKeyScreen",
 		},
 		{
 			label: "📊 Export",
-			value: "export",
-			disabled: true,
+			// @ts-expect-error coming soon
+			value: "ExportScreen",
 		},
 		{
 			label: "🔧 Settings",
-			value: "settings",
-			disabled: true,
+			// @ts-expect-error coming soon
+			value: "SettingsScreen",
 		},
 		{
 			label: "← Back to Config Selection",
@@ -129,7 +129,9 @@ export default function MainMenu() {
 					if (item.value === "exit") {
 						exit();
 					} else if (item.value === "back") {
-						setCurrentScreen("config-selector");
+						setCurrentScreen("ConfigSelector");
+					} else if (item.value in screens) {
+						setCurrentScreen(item.value as keyof typeof screens);
 					} else {
 						setSelectedAction(item.value);
 					}

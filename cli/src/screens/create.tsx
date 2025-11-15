@@ -40,7 +40,7 @@ export default function Create() {
 			else setFocusedField("name");
 		}
 		if (key.escape) {
-			setCurrentScreen("config-selector");
+			setCurrentScreen("ConfigSelector");
 		}
 	});
 

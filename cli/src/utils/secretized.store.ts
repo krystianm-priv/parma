@@ -6,7 +6,7 @@ import {
 import type z from "zod";
 import { create } from "zustand";
 import { secretizedSchema } from "./secretized.schema.js";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 
 // store that will store the the secretized contents and the private key
 
@@ -20,6 +20,15 @@ interface SecretizedStore {
 	//
 	configFilePath: string | null;
 	setConfigFilePath(path: string | null): void;
+	saveConfigFile(): void;
+
+	// add secret
+	addSecret: (params: {
+		category: string;
+		name: string;
+		type: "utf8" | "base64" | "hex" | "encrypted";
+		value: string;
+	}) => void;
 }
 
 export const useSecretizedStore = create<SecretizedStore>((set, get) => ({
@@ -55,5 +64,50 @@ export const useSecretizedStore = create<SecretizedStore>((set, get) => ({
 				secretizedSecrets: validated,
 			});
 		}
+	},
+
+	saveConfigFile() {
+		const { configFilePath, secretizedSecrets, setConfigFilePath } = get();
+		if (!configFilePath) {
+			throw new Error("No config file path set");
+		}
+		if (!secretizedSecrets) {
+			throw new Error("Secretized secrets not loaded yet");
+		}
+		const serialized = JSON.stringify(secretizedSecrets, null, "\t");
+		writeFileSync(configFilePath, serialized, "utf-8");
+		setConfigFilePath(configFilePath); // reload to ensure consistency
+	},
+
+	addSecret: ({ category, name, value, type }) => {
+		const { secretizedSecrets, adapter, saveConfigFile } = get();
+		if (!secretizedSecrets) {
+			throw new Error("Secretized secrets not loaded yet");
+		}
+		// biome-ignore lint/suspicious/noAssignInExpressions: allow this
+		const categoryRef = (secretizedSecrets.secrets[category] ??= {});
+		if (categoryRef[name]) {
+			throw new Error(
+				`Secret with name ${name} already exists in category ${category}`,
+			);
+		}
+
+		if (type === "encrypted") {
+			if (!adapter) {
+				throw new Error("No adapter set for encryption");
+			}
+			const encryptedValue = adapter.encryptValue(value);
+			categoryRef[name] = {
+				kind: "encrypted",
+				value: encryptedValue,
+			};
+		} else {
+			categoryRef[name] = {
+				kind: type,
+				value: value,
+			};
+		}
+
+		saveConfigFile();
 	},
 }));

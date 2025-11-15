@@ -82,10 +82,10 @@ export default function ConfigSelector() {
 				items={items}
 				onSelect={(selection) => {
 					if (selection.value === "__CREATE__") {
-						setCurrentScreen("create");
+						setCurrentScreen("Create");
 					} else {
 						setConfigFilePath(path.resolve(cwd(), selection.value));
-						setCurrentScreen("main-menu");
+						setCurrentScreen("MainMenu");
 					}
 				}}
 			/>
